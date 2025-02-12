@@ -1,99 +1,98 @@
+// backend.js
+console.log('Javascript Loaded');
 
 // ============================== SIDEBAR ==============================
 function openNav() {
     document.getElementById("mySidebar").style.width = "250px";
     document.getElementById("main").style.marginLeft = "250px";
-    }
-    
-    function closeNav() {
+}
+
+function closeNav() {
     document.getElementById("mySidebar").style.width = "0";
-    document.getElementById("main").style.marginLeft= "0";
-    }
+    document.getElementById("main").style.marginLeft = "0";
+}
 
-// ============================== Connection Websocket Server ==============================
-const socket = io('http://localhost:3000');  // Replace with your Raspberry Pi's IP if needed
+function parseDataString(dataString) {
+    const fields = ["landingsplaats", "servoSturen", "temperature", "pressure", "altitude",
+        "longitude", "latitude", "accelX", "accelY", "accelZ",
+        "gyroX", "gyroY", "gyroZ"];
+    const values = dataString.split(";");
 
-socket.on('connect', () => {
-  console.log('Connected to WebSocket server');
-});
+    return Object.fromEntries(fields.map((key, index) => [key, values[index]]));
+}
 
- // ============================== Temp graph ==============================
- //https://canvasjs.com/javascript-charts/multi-series-area-chart/
- window.onload = function () {
+// ============================== Graphs real-time data ==============================
 
-    var chart = new CanvasJS.Chart("chartContainer", {
-        animationEnabled: true,
-        title: {
-            text: ""
-        },
-        axisX: {
-            valueFormatString: "DDD",
-            minimum: new Date(2025, 0, 1), //1 Jan 2025
-            maximum: new Date(2026, 0, 1), //1 Jan 2026
-            interval: 1
-        },
-        axisY: {
-            title: "Temperature (°C)",
-        },
-        legend: {
-            verticalAlign: "top",
-            horizontalAlign: "right",
-            dockInsidePlotArea: true
-        },
-        toolTip: {
-            shared: true
-        },
-        data: [{ // Pas data aan (websockets)
-            name: "Maximum",
-            showInLegend: true,
-            legendMarkerType: "square",
-            type: "area",
-            color: "rgba(40,175,101,0.6)",
-            markerSize: 0,
-            dataPoints: [
-                { x: new Date(2025, 0, 6), y: 45 },
-                { x: new Date(2025, 0, 7), y: 45 },
-                { x: new Date(2025, 0, 8), y: 45 },
-                { x: new Date(2025, 0, 9), y: 45 },
-                { x: new Date(2025, 0, 10), y: 45 },
-                { x: new Date(2025, 0, 11), y: 45 },
-                { x: new Date(2025, 0, 12), y: 45 }
-            ]
-        },
-        {
-            name: "Minimum",
-            showInLegend: true,
-            legendMarkerType: "square",
-            type: "area",
-            color: "rgba(0,75,141,0.7)",
-            markerSize: 0,
-            dataPoints: [
-                { x: new Date(2025, 0, 6), y: 42 },
-                { x: new Date(2025, 0, 7), y: 34 },
-                { x: new Date(2025, 0, 8), y: 29 },
-                { x: new Date(2025, 0, 9), y: 42 },
-                { x: new Date(2025, 0, 10), y: 53},
-                { x: new Date(2025, 0, 11), y: 15 },
-                { x: new Date(2025, 0, 12), y: 12 }
-            ]
-        }]
+let temperatureChart, humidityChart, rainChart, soilChart; // Declare variables
+
+function createCharts() { // Function to create charts
+    const ctxTemp = document.getElementById("temperatureChart").getContext("2d");
+    const ctxHumidity = document.getElementById("humidityChart").getContext("2d");
+    const ctxRain = document.getElementById("rainChart").getContext("2d");
+    const ctxSoil = document.getElementById("soilChart").getContext("2d");
+
+    temperatureChart = createChart(ctxTemp, "Temperature (°C)", "red", "Temperature (°C)");
+    humidityChart = createChart(ctxHumidity, "Humidity (%)", "blue", "Humidity (%)");
+    rainChart = createChart(ctxRain, "Rain (%)", "green", "Rain (%)");
+    soilChart = createChart(ctxSoil, "Soil Moisture (%)", "yellow", "Soil Moisture (%)");
+}
+
+
+function createChart(ctx, label, color, yLabel) {
+    return new Chart(ctx, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: label, data: [], borderColor: color, fill: false }] },
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { autoSkip: true, maxTicksLimit: 10, color: 'black', borderColor: 'black' } },
+                y: { title: { display: true, text: yLabel, color: 'black', borderColor: 'black' } }
+            }
+        }
     });
-    chart.render();
-    
+}
+
+function updateChart(chart, label, value) {
+    if (chart.data.labels.length > 10) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(value);
+    chart.update();
+}
+
+// ============================== Simulatie van Data ==============================
+window.addEventListener('DOMContentLoaded', (event) => {
+    createCharts();
+
+    function updateLiveData() {
+        const temperature = (Math.random() * 10 + 20).toFixed(2);  // Simulatie van temperatuur
+        const humidity = (Math.random() * 20 + 980).toFixed(2);    // Simulatie van luchtvochtigheid
+        const rain = (Math.random() * 40 + 30).toFixed(2);         // Simulatie van regen
+        const soil = (Math.random() * 40 + 30).toFixed(2);         // Simulatie van bodemvochtigheid
+
+        const liveData = `Temperature: ${temperature} °C, Rain: ${rain} %, Soil: ${soil} %, Humidity: ${humidity} %`;
+
+        // Werk de textbox bij met de nieuwe data
+        document.getElementById('liveData').value = liveData;
     }
 
-
-
- // ============================== Humidity graph ==============================
- //https://canvasjs.com/html5-javascript-spline-area-chart/
-
-
-
-
- // ============================== Rain graph ==============================
- // https://canvasjs.com/html5-javascript-column-chart/
-
-
-
- //============================= Soil graph ==============================
- //https://canvasjs.com/javascript-charts/line-chart-zoom-pan/
+    setInterval(() => {
+        const time = new Date().toLocaleTimeString();
+        const temperature = (Math.random() * 10 + 20).toFixed(2);
+        const humidity = (Math.random() * 20 + 980).toFixed(2);
+        const rain = (Math.random() * 40 + 30).toFixed(2);
+        const soil = (Math.random() * 40 + 30).toFixed(2);
+    
+        // Update the graphs
+        updateChart(temperatureChart, time, temperature);
+        updateChart(humidityChart, time, humidity);
+        updateChart(rainChart, time, rain);
+        updateChart(soilChart, time, soil);
+    
+        // Update the single textbox with all data in one line
+        document.getElementById("realTimeData").value = 
+            `Temp: ${temperature}°C | Rain: ${rain}% | Soil: ${soil}% | Humidity: ${humidity}%`;
+    }, 3000);
+});
