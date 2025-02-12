@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="nl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Historische Data</title>
+        <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>    
+        <link rel="stylesheet" href="stylesHistorische.css">
+        <script src="interaction.js"></script>
+    </head>
+
+    <body>
+        <header>
+            <h1 class="header1">Monthly Forecast</h1>
+        </header>
+        <div id="chartContainer"></div>
+        <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">close</a>
+        <a href="ActueleData.html">Actual Data</a>
+            <div class="dropdown">
+                <button class="dropdown_hover" href="HistorischeData.html">Historical Data<i class="down_arrow"></i></button>
+                <div class="dropdown_content">
+                    <a href="WeeklyData.html">Weekly Data</a>
+                    <a href="MonthlyData.html">Monthly Data</a>
+                </div>
+            </div>
+            <a href="AboutUs.html">About us</a>
+        </div>
+
+        <div id="main">
+        <button class="openbtn" onclick="openNav()">☰</button>
+        </div>
+
+    </body>
+</html>
