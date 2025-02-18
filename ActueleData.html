@@ -4,32 +4,62 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Historische Data</title>
-        <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>    
-        <link rel="stylesheet" href="stylesHistorische.css">
-        <script src="interaction.js"></script>
+        <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    
+        <link rel="stylesheet" href="styles.css">
+        <script defer src="script.js"></script>
+        
     </head>
 
     <body>
         <header>
-            <h1 class="header1">Monthly Forecast</h1>
+            <h1 class="header1">Actual Data</h1>
         </header>
-        <div id="chartContainer"></div>
+
+        <div class="data-box">
+            <input type="text" id="liveData" class="liveDataTextbox" readonly>
+        </div>
+        <div id="main">
+            <button class="openbtn" onclick="openNav()">☰</button>
+        </div>
+
         <div id="mySidebar" class="sidebar">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">close</a>
-        <a href="ActueleData.html">Actual Data</a>
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">Exit</a>
+            <a href="ActueleData.html">Actual Data</a>
             <div class="dropdown">
-                <button class="dropdown_hover" href="HistorischeData.html">Historical Data<i class="down_arrow"></i></button>
+                <button class="dropdown_hover">Historical Data<i class="down_arrow"></i></button>
                 <div class="dropdown_content">
+                    <a href="dayData.html">24hr Data</a>
                     <a href="WeeklyData.html">Weekly Data</a>
                     <a href="MonthlyData.html">Monthly Data</a>
                 </div>
             </div>
-            <a href="AboutUs.html">About us</a>
         </div>
 
-        <div id="main">
-        <button class="openbtn" onclick="openNav()">☰</button>
-        </div>
-
+        <div class="chart-container">
+            <div class="chart-box">
+                <h2 class="header2">Temperature</h2>
+                <canvas id="temperatureChart"></canvas>
+                <div class="chart-footer">Sendstation 2</div>
+            </div>
+    
+            <div class="chart-box">
+                <h2 class="header2">Humidity</h2>
+                <canvas id="humidityChart"></canvas>
+                <div class="chart-footer">Sendstation 2</div>
+            </div>
+    
+            <div class="chart-box">
+                <h2 class="header2">Rain</h2>
+                <canvas id="rainChart"></canvas>
+                <div class="chart-footer">Sendstation 1</div>
+            </div>
+    
+            <div class="chart-box">
+                <h2 class="header2">Soil Moisture</h2>
+                <canvas id="soilChart"></canvas>
+                <div class="chart-footer">Sendstation 3</div>
+            </div>
+        </div> 
     </body>
 </html>

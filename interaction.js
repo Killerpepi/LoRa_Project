@@ -1,99 +1,136 @@
+SCRIPT.JS
+
+// ============================== WebSocket ==============================
+const socket = new WebSocket('ws://192.168.0.101:8080'); // Connect to the WebSocket server
+
+socket.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+
+    console.log('Received data:', data);
+    updateGraphs(data);
+};
+
+socket.onopen = function () {
+    console.log('Connected to WebSocket server');
+};
+
+socket.onerror = function (error) {
+    console.log('WebSocket error:', error);
+};
+
+socket.onclose = function () {
+    console.log('WebSocket disconnected!');
+};
+
+// ============================== MQTT berichten inlezen ==============================
+
+const broker = "ws://localhost:9001";
+const topic = "test/topic";
+const client = mqtt.connect(broker);
+
+client.on("connect", () => {
+    console.log("Verbonden met MQTT broker");
+    document.getElementById("status").innerText = "Verbonden";
+
+    // Abonneer op een topic
+    client.subscribe(topic, (err) => {
+        if (!err) {
+            console.log(`Geabonneerd op topic: ${topic}`);
+        }
+    });
+});
+
+// Bericht ontvangen
+client.on("message", (receivedTopic, message) => {
+    console.log(`Ontvangen van ${receivedTopic}: ${message.toString()}`);
+    const msgList = document.getElementById("messages");
+    const listItem = document.createElement("li");
+    listItem.textContent = `📩 ${message.toString()}`;
+    msgList.appendChild(listItem);
+});
+
+// Bericht verzenden
+function sendMessage() {
+    const message = document.getElementById("messageInput").value;
+    if (message.trim() !== "") {
+        client.publish(topic, message);
+        console.log(`Verzonden: ${message}`);
+    }
+}
+
+// Foutafhandeling
+client.on("error", (err) => {
+    console.error("MQTT Fout:", err);
+});
+
+client.on("close", () => {
+    document.getElementById("status").innerText = "Verbinding verbroken";
+});
 
 // ============================== SIDEBAR ==============================
 function openNav() {
     document.getElementById("mySidebar").style.width = "250px";
     document.getElementById("main").style.marginLeft = "250px";
-    }
-    
-    function closeNav() {
+}
+
+function closeNav() {
     document.getElementById("mySidebar").style.width = "0";
-    document.getElementById("main").style.marginLeft= "0";
-    }
+    document.getElementById("main").style.marginLeft = "0";
+}
 
-// ============================== Connection Websocket Server ==============================
-const socket = io('http://localhost:3000');  // Replace with your Raspberry Pi's IP if needed
+// ============================== Graphs real-time data ==============================
 
-socket.on('connect', () => {
-  console.log('Connected to WebSocket server');
+let temperatureChart, humidityChart, rainChart, soilChart; // Declare variables
+
+window.addEventListener('DOMContentLoaded', (event) => {
+    createCharts();
 });
 
- // ============================== Temp graph ==============================
- //https://canvasjs.com/javascript-charts/multi-series-area-chart/
- window.onload = function () {
+function createCharts() { // Function to create charts
+    const ctxTemp = document.getElementById("temperatureChart").getContext("2d");
+    const ctxHumidity = document.getElementById("humidityChart").getContext("2d");
+    const ctxRain = document.getElementById("rainChart").getContext("2d");
+    const ctxSoil = document.getElementById("soilChart").getContext("2d");
 
-    var chart = new CanvasJS.Chart("chartContainer", {
-        animationEnabled: true,
-        title: {
-            text: ""
-        },
-        axisX: {
-            valueFormatString: "DDD",
-            minimum: new Date(2025, 0, 1), //1 Jan 2025
-            maximum: new Date(2026, 0, 1), //1 Jan 2026
-            interval: 1
-        },
-        axisY: {
-            title: "Temperature (°C)",
-        },
-        legend: {
-            verticalAlign: "top",
-            horizontalAlign: "right",
-            dockInsidePlotArea: true
-        },
-        toolTip: {
-            shared: true
-        },
-        data: [{ // Pas data aan (websockets)
-            name: "Maximum",
-            showInLegend: true,
-            legendMarkerType: "square",
-            type: "area",
-            color: "rgba(40,175,101,0.6)",
-            markerSize: 0,
-            dataPoints: [
-                { x: new Date(2025, 0, 6), y: 45 },
-                { x: new Date(2025, 0, 7), y: 45 },
-                { x: new Date(2025, 0, 8), y: 45 },
-                { x: new Date(2025, 0, 9), y: 45 },
-                { x: new Date(2025, 0, 10), y: 45 },
-                { x: new Date(2025, 0, 11), y: 45 },
-                { x: new Date(2025, 0, 12), y: 45 }
-            ]
-        },
-        {
-            name: "Minimum",
-            showInLegend: true,
-            legendMarkerType: "square",
-            type: "area",
-            color: "rgba(0,75,141,0.7)",
-            markerSize: 0,
-            dataPoints: [
-                { x: new Date(2025, 0, 6), y: 42 },
-                { x: new Date(2025, 0, 7), y: 34 },
-                { x: new Date(2025, 0, 8), y: 29 },
-                { x: new Date(2025, 0, 9), y: 42 },
-                { x: new Date(2025, 0, 10), y: 53},
-                { x: new Date(2025, 0, 11), y: 15 },
-                { x: new Date(2025, 0, 12), y: 12 }
-            ]
-        }]
+    temperatureChart = createChart(ctxTemp, "Temperature (°C)", "red", "Temperature (°C)");
+    humidityChart = createChart(ctxHumidity, "Humidity (%)", "blue", "Humidity (%)");
+    rainChart = createChart(ctxRain, "Rain (%)", "green", "Rain (%)");
+    soilChart = createChart(ctxSoil, "Soil Moisture (%)", "yellow", "Soil Moisture (%)");
+}
+
+
+function createChart(ctx, label, color, yLabel) {
+    return new Chart(ctx, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: label, data: [], borderColor: color, fill: false }] },
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { autoSkip: true, maxTicksLimit: 10, color: 'black', borderColor: 'black' } },
+                y: { title: { display: true, text: yLabel, color: 'black', borderColor: 'black' } }
+            }
+        }
     });
-    chart.render();
-    
+}
+
+function updateChart(chart, label, value) {
+    if (chart.data.labels.length > 10) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
     }
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(value);
+    chart.update();
+}
 
-
-
- // ============================== Humidity graph ==============================
- //https://canvasjs.com/html5-javascript-spline-area-chart/
-
-
-
-
- // ============================== Rain graph ==============================
- // https://canvasjs.com/html5-javascript-column-chart/
-
-
-
- //============================= Soil graph ==============================
- //https://canvasjs.com/javascript-charts/line-chart-zoom-pan/
+function updateGraphs(data) {
+    if (data.temperature && data.humidity && data.rain && data.soil) {
+        const time = new Date().toLocaleTimeString();
+        updateChart(temperatureChart, time, data.temperature);
+        updateChart(humidityChart, time, data.humidity);
+        updateChart(rainChart, time, data.rain);
+        updateChart(soilChart, time, data.soil);
+    } else {
+        console.error("Invalid data received:", data);
+    }
+}
