@@ -1,7 +1,5 @@
-SCRIPT.JS
-
 // ============================== WebSocket ==============================
-const socket = new WebSocket('ws://192.168.0.101:8080'); // Connect to the WebSocket server
+const socket = new WebSocket('ws://192.168.0.101:9001'); // Connect to the WebSocket server
 
 socket.onmessage = function (event) {
     const data = JSON.parse(event.data);
@@ -9,7 +7,7 @@ socket.onmessage = function (event) {
     console.log('Received data:', data);
     updateGraphs(data);
 };
-
+l
 socket.onopen = function () {
     console.log('Connected to WebSocket server');
 };
@@ -24,8 +22,8 @@ socket.onclose = function () {
 
 // ============================== MQTT berichten inlezen ==============================
 
-const broker = "ws://localhost:9001";
-const topic = "test/topic";
+const broker = "ws://192.168.0.101:9001";
+const topic = "pmbm";
 const client = mqtt.connect(broker);
 
 client.on("connect", () => {
